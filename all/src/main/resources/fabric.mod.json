@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "id": "${id}",
+  "id": "kts4mc",
   "version": "${version}",
-  "name": "${name}",
+  "name": "KotlinScript4Minecraft",
   "description": "Kotlin script for Minecraft",
   "authors": [
     "ZhuRuoLing"
@@ -10,18 +10,19 @@
   "contact": {
     "sources": "https://github.com/ZhuRuoLing/kts4mc"
   },
+  "license": "LGPL",
   "icon": "assets/kts4mc/icon.png",
   "environment": "*",
-  "entrypoints": {
-    "main": [
-      "icu.takeneko.kts4mc.Kts4MC"
-    ]
-  },
-  "mixins": [
-    "kts4mc.mixins.json"
-  ],
   "depends": {
-    "fabricloader": ">=0.11.4",
-    "minecraft": "${minecraft_dependency}"
+    "minecraft": [
+      "1.14.x",
+      "1.15.x",
+      "1.16.x",
+      "1.18.x",
+      "1.19.4",
+      "1.20.1",
+      "1.20.6"
+    ],
+    "fabric-language-kotlin": "*"
   }
 }

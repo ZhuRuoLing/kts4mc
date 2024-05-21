@@ -3,6 +3,9 @@ apply plugin: 'com.github.hierynomus.license'
 apply plugin: 'fabric-loom'
 apply plugin: 'com.replaymod.preprocess'
 apply plugin: 'me.fallenbreath.yamlang'
+apply plugin: 'org.jetbrains.kotlin.jvm'
+apply plugin: 'org.jetbrains.kotlin.plugin.serialization'
+apply plugin: "com.github.johnrengelman.shadow"
 
 int mcVersion = project.mcVersion
 
@@ -14,14 +17,14 @@ repositories {
 	maven {
 		url 'https://jitpack.io'
 	}
-	maven {
-		url 'https://maven.fallenbreath.me/releases'
-	}
 }
 
 // https://github.com/FabricMC/fabric-loader/issues/783
 configurations {
 	modRuntimeOnly.exclude group: 'net.fabricmc', module: 'fabric-loader'
+
+	api.extendsFrom includeApi
+	shadowInclude
 }
 
 dependencies {
@@ -30,22 +33,14 @@ dependencies {
 	mappings "net.fabricmc:yarn:${project.yarn_mappings}:v2"
 	modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
 
-	// runtime mods
-//	if (mcVersion < 11904) {
-//		modRuntimeOnly(mcVersion < 11900 ? "com.github.astei:lazydfu:0.1.2" : "com.github.Fallen-Breath:lazydfu:a7cfc44c0c")
-//	}
-//	// [FEATURE] MIXIN_AUDITOR
-//	modRuntimeOnly 'me.fallenbreath:mixin-auditor:0.1.0'
-
-	// dependencies
-//	include(modImplementation(fabricApi.module("fabric-resource-loader-v0", project.fabric_api_version)))
-//	include(modImplementation("me.fallenbreath:conditional-mixin-fabric:${project.conditionalmixin_version}"))
-//	include(annotationProcessor(implementation("io.github.llamalad7:mixinextras-fabric:${project.mixinextras_version}")))
+	modImplementation("net.fabricmc:fabric-language-kotlin:1.10.20+kotlin.1.9.24")
+	shadowInclude("net.fabricmc:tiny-remapper:0.10.3")
 }
 
-String MIXIN_CONFIG_PATH = 'template_mod.mixins.json'
+String MIXIN_CONFIG_PATH = 'kts4mc.mixins.json'
 String LANG_DIR = 'assets/template_mod/lang'
 JavaVersion JAVA_COMPATIBILITY
+
 if (mcVersion >= 12005) {
 	JAVA_COMPATIBILITY = JavaVersion.VERSION_21
 } else if (mcVersion >= 11800) {
@@ -57,6 +52,25 @@ if (mcVersion >= 12005) {
 }
 JavaVersion MIXIN_COMPATIBILITY_LEVEL = JAVA_COMPATIBILITY
 
+String KOTLIN_COMPATIBILITY = "1.8"
+
+if (mcVersion >= 12005) {
+	KOTLIN_COMPATIBILITY = "21"
+} else if (mcVersion >= 11800) {
+	KOTLIN_COMPATIBILITY = "17"
+} else if (mcVersion >= 11700) {
+	KOTLIN_COMPATIBILITY = "16"
+} else {
+	KOTLIN_COMPATIBILITY = "1.8"
+}
+
+compileKotlin {
+	kotlinOptions {
+		jvmTarget = KOTLIN_COMPATIBILITY
+	}
+}
+
+
 loom {
 	runConfigs.configureEach {
 		// to make sure it generates all "Minecraft Client (:subproject_name)" applications
@@ -64,14 +78,24 @@ loom {
 		runDir '../../run'
 		vmArgs '-Dmixin.debug.export=true'
 	}
-//	// [FEATURE] MIXIN_AUDITOR
-//	runs {
-//		serverMixinAudit {
-//			server()
-//			vmArgs '-DmixinAuditor.audit=true'
-//			ideConfigGenerated false
-//		}
-//	}
+}
+
+shadowJar {
+	archiveClassifier = "all-dev"
+	configurations = [project.configurations.shadowInclude]
+	minimize()
+	from("LICENSE") {
+		rename { "${it}_${project.archivesBaseName}" }
+	}
+	exclude "/kotlin*"
+	relocate "net.fabricmc", "icu.takeneko.deps.fabricmc"
+}
+
+task("remapShadowJar", type: net.fabricmc.loom.task.RemapJarTask, dependsOn: shadowJar) {
+	remapperIsolation = true
+	input = shadowJar.archiveFile
+	archiveFileName = shadowJar.archiveFileName.get().replaceAll("-dev\\.jar\$", ".jar")
+	addNestedDependencies = true
 }
 
 remapJar {
@@ -201,18 +225,6 @@ publishing {
 
 	// select the repositories you want to publish to
 	repositories {
-		// mavenLocal()
-
-//		// [FEATURE] FALLENS_MAVEN
-//		maven {
-//			url = version.endsWith("SNAPSHOT") ? "https://maven.fallenbreath.me/snapshots" : "https://maven.fallenbreath.me/releases"
-//			credentials(PasswordCredentials) {
-//				username = 'fallen'
-//				password = System.getenv("FALLENS_MAVEN_TOKEN")
-//			}
-//			authentication {
-//				basic(BasicAuthentication)
-//			}
-//		}
+		mavenLocal()
 	}
 }
