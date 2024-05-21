@@ -14,7 +14,7 @@
   "environment": "*",
   "entrypoints": {
     "main": [
-      "icu.takeneko.kts4mc.Mod"
+      "icu.takeneko.kts4mc.internal.CompatModInitializer"
     ]
   },
   "mixins": [
