@@ -4,6 +4,7 @@
   "package": "icu.takeneko.kts4mc.mixins",
   "compatibilityLevel": "{{COMPATIBILITY_LEVEL}}",
   "mixins": [
+    "CommandManagerMixin"
   ],
   "client": [
   ],
