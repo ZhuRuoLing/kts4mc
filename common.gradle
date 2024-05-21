@@ -9,10 +9,6 @@ apply plugin: "com.github.johnrengelman.shadow"
 
 int mcVersion = project.mcVersion
 
-preprocess {
-	tabIndentation = true
-}
-
 repositories {
 	maven {
 		url 'https://jitpack.io'
@@ -39,10 +35,10 @@ dependencies {
 
 String MIXIN_CONFIG_PATH = 'kts4mc.mixins.json'
 String LANG_DIR = 'assets/template_mod/lang'
-JavaVersion JAVA_COMPATIBILITY
+JavaVersion JAVA_COMPATIBILITY = JavaVersion.VERSION_1_8
 
 if (mcVersion >= 12005) {
-	JAVA_COMPATIBILITY = JavaVersion.VERSION_21
+	JAVA_COMPATIBILITY = JavaVersion.VERSION_17
 } else if (mcVersion >= 11800) {
 	JAVA_COMPATIBILITY = JavaVersion.VERSION_17
 } else if (mcVersion >= 11700) {
@@ -55,7 +51,7 @@ JavaVersion MIXIN_COMPATIBILITY_LEVEL = JAVA_COMPATIBILITY
 String KOTLIN_COMPATIBILITY = "1.8"
 
 if (mcVersion >= 12005) {
-	KOTLIN_COMPATIBILITY = "21"
+	KOTLIN_COMPATIBILITY = "17"
 } else if (mcVersion >= 11800) {
 	KOTLIN_COMPATIBILITY = "17"
 } else if (mcVersion >= 11700) {
@@ -80,35 +76,11 @@ loom {
 	}
 }
 
-shadowJar {
-	archiveClassifier = "all-dev"
-	configurations = [project.configurations.shadowInclude]
-	minimize()
-	from("LICENSE") {
-		rename { "${it}_${project.archivesBaseName}" }
-	}
-	exclude "/kotlin*"
-	relocate "net.fabricmc", "icu.takeneko.deps.fabricmc"
-}
-
-task("remapShadowJar", type: net.fabricmc.loom.task.RemapJarTask, dependsOn: shadowJar) {
-	remapperIsolation = true
-	input = shadowJar.archiveFile
-	archiveFileName = shadowJar.archiveFileName.get().replaceAll("-dev\\.jar\$", ".jar")
-	addNestedDependencies = true
-}
-
 remapJar {
 	remapperIsolation = true
 }
 
 String versionSuffix = ''
-// detect github action environment variables
-// https://docs.github.com/en/actions/learn-github-actions/environment-variables#default-environment-variables
-if (System.getenv("BUILD_RELEASE") != "true") {
-	String buildNumber = System.getenv("BUILD_ID")
-	versionSuffix += buildNumber != null ? ('+build.' + buildNumber) : '-SNAPSHOT'
-}
 String fullModVersion = project.mod_version + versionSuffix
 
 group = project.maven_group
@@ -121,6 +93,25 @@ if (System.getenv("JITPACK") == "true") {
 	version = 'mc' + project.minecraft_version + '-v' + fullModVersion
 }
 
+shadowJar {
+	archiveClassifier = "all-dev"
+	configurations = [project.configurations.shadowInclude]
+	minimize()
+	from("LICENSE") {
+		rename { "${it}_${project.archivesBaseName}" }
+	}
+	exclude "/kotlin*"
+	relocate "net.fabricmc", "icu.takeneko.deps.fabricmc"
+	archiveBaseName = "kts4mc"
+}
+
+task("remapShadowJar", type: net.fabricmc.loom.task.RemapJarTask, dependsOn: shadowJar) {
+	remapperIsolation = true
+	input = shadowJar.archiveFile
+	archiveFileName = shadowJar.archiveFileName.get().replaceAll("-dev\\.jar\$", ".jar")
+	addNestedDependencies = true
+}
+
 // See https://youtrack.jetbrains.com/issue/IDEA-296490
 // if IDEA complains about "Cannot resolve resource filtering of MatchingCopyAction" and you want to know why
 processResources {
@@ -131,9 +122,9 @@ processResources {
 
 	filesMatching("fabric.mod.json") {
 		def valueMap = [
-				"id": project.mod_id,
+				"id": project.mod_id + "-mc" + project.minecraft_version.replace(".", "_"),
 				"name": project.mod_name,
-				"version": fullModVersion,
+				"version": fullModVersion ,
 				"minecraft_dependency": project.minecraft_dependency,
 		]
 		expand valueMap

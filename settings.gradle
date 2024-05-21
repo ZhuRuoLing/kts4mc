@@ -10,6 +10,9 @@ pluginManagement {
 			name = 'Jitpack'
 			url = 'https://jitpack.io'
 		}
+		maven {
+			url = "https://maven.fabricmc.net"
+		}
 		mavenCentral()
 		gradlePluginPortal()
 	}
@@ -17,7 +20,7 @@ pluginManagement {
 		eachPlugin {
 			switch (requested.id.id) {
 				case "com.replaymod.preprocess": {
-					useModule("com.github.Fallen-Breath:preprocessor:${requested.version}")
+					useModule("com.github.replaymod:preprocessor:${requested.version}")
 					break
 				}
 			}

@@ -67,7 +67,7 @@ processResources {
 
         fabric_subprojects.each({
             mc_condition.add("${it.minecraft_dependency}")
-            jars.add(["file": "META-INF/jars/${project.archives_base_name}-v${project.mod_version}-mc${it.minecraft_version}.jar"])
+            jars.add(["file": "META-INF/jars/${project.archives_base_name}-mc${it.minecraft_version}-v${project.mod_version}-all.jar"])
         })
 
         File file = file("build/resources/main/fabric.mod.json")

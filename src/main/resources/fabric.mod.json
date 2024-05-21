@@ -14,7 +14,7 @@
   "environment": "*",
   "entrypoints": {
     "main": [
-      "icu.takeneko.kts4mc.Kts4MC"
+      "icu.takeneko.kts4mc.Mod"
     ]
   },
   "mixins": [
