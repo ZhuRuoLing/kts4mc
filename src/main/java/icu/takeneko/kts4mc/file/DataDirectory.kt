@@ -34,4 +34,8 @@ class DataDirectory(
     operator fun get(path: String): File {
         return root.resolve(path).toFile()
     }
+
+    fun exists(fileName: String): Boolean {
+        return root.resolve(fileName).exists()
+    }
 }
